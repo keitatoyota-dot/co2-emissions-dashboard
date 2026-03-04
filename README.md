@@ -1,65 +1,182 @@
-# CO2 Emissions Dashboard
+# CO2排出量ダッシュボード
 
-This project is a web application that calculates and visualizes corporate CO2 emissions based on the GHG Protocol.
+このプロジェクトは、GHGプロトコルに基づいて企業のCO2排出量を計算・可視化するWebアプリケーションです。
 
-The system estimates emissions across Scope 1, Scope 2, and Scope 3 and provides visual dashboards to help companies understand their environmental impact.
-
----
-
-## Why I built this
-
-While studying environmental management at university, I learned the importance of carbon accounting in ESG management.
-
-Initially, I developed a personal carbon footprint calculator. However, individuals often do not know their exact electricity usage, making continuous usage difficult.
-
-Therefore, I pivoted the concept toward companies, where electricity usage and fuel consumption data are already recorded. This led me to design a web application that helps organizations calculate their CO2 emissions more realistically.
+このシステムはスコープ1、スコープ2、スコープ3の排出量を推定し、企業が環境への影響を理解するための視覚的なダッシュボードを提供します。
 
 ---
 
-## Features
+## なぜこれを作ったのか
 
-- CO2 emissions calculation based on the GHG Protocol
-- Scope 1, Scope 2, and Scope 3 categorization
-- Industry-based emission templates
-- Interactive dashboard visualization
+大学で環境経営を学ぶ中で、ESGマネジメントにおけるカーボンカウンセリングの重要性を学びました。
+
+最初は、個人用のカーボンフットプリント計算機を開発しました。しかし、個人が正確な電力使用量を把握できていないことが多く、継続的な使用が困難です。また、電気代の請求書を見て「今月何kWh使ったか」をわざわざ調べる手間が、実際の利用ハードルになることに気づきました。
+
+そこで、電力使用量や燃料消費量のデータがすでに記録されている企業向けにコンセプトを転換しました。これにより、担当者がより現実的にCO2排出量を計算できるWebアプリケーションを設計しました。さらに、業界によって主要な排出源が大きく異なる（製造業は工場燃料、小売業は冷蔵設備の冷媒など）という点を踏まえ、**業界別テンプレート方式**を採用することで、どの業種の企業でも使えるよう拡張性を持たせています。
 
 ---
 
-## Live Demo
+## 特徴
+
+- 温室効果ガスプロトコルに基づくCO2排出量の計算
+- スコープ1、スコープ2、スコープ3の分類
+- 産業ベースの排出テンプレート（IT・オフィス業 / 製造業 / 小売・流通業）
+- インタラクティブダッシュボードの可視化（月別推移・Scope別構成比・前年比較・削減目標進捗）
+
+---
+
+## ライブデモ
 
 https://ecotrace-dash-yxlp63tb.manus.space
 
 ---
 
-## Tech Stack
+## テックスタック
 
-Frontend  
-- React  
-- TypeScript  
+**フロントエンド**
+- React 19 + TypeScript
+- Tailwind CSS 4 / shadcn/ui（UIコンポーネント）
+- Framer Motion（アニメーション）
+- Wouter（クライアントサイドルーティング）
 
-Visualization  
-- Recharts  
+**可視化**
+- Recharts（月別推移グラフ・円グラフ・棒グラフ）
 
-Environment  
-- Node.js
-
----
-
-## Architecture
-
-The system separates industry templates from the core calculation logic.
-
-Each industry has different emission structures.
-
-Examples:
-- Manufacturing companies emit more from fuel usage
-- Retail businesses emit more from refrigeration systems
-- IT companies emit mainly from electricity consumption
-
-This architecture allows new industries to be added without modifying the core logic.
+**環境**
+- Node.js / Vite 7（ビルドツール）
+- pnpm（パッケージマネージャー）
 
 ---
 
-## Setup
+## 設計
 
-Clone the repository
+このシステムは業界のテンプレートとコア計算ロジックを分離しています。
+
+各産業は異なる排出構造を持っています。
+
+例：
+- 製造企業は燃料使用量からより多くの排出をしています
+- 小売業は冷蔵システムからの排出量が増えます
+- IT企業は主に電力消費から排出量を出しています
+
+このアーキテクチャにより、コアロジックを変更することなく新しい産業を追加できます。
+
+### 業界テンプレートの構造
+
+```typescript
+// lib/industry-templates.ts
+export interface IndustryTemplate {
+  id: string;
+  name: string;
+  items: EmissionItem[];      // 業界固有の入力項目
+  benchmarks: {               // 業界平均ベンチマーク（従業員1人あたり）
+    scope1PerEmployee: number;
+    scope2PerEmployee: number;
+    scope3PerEmployee: number;
+  };
+}
+
+export interface EmissionItem {
+  id: string;
+  name: string;               // 入力項目名（例：「電力使用量」）
+  unit: string;               // 単位（例：kWh、L、tkm）
+  scope: 'scope1' | 'scope2' | 'scope3';
+  emissionFactor: number;     // 排出係数（kgCO2e/単位）
+}
+```
+
+### 排出係数の根拠
+
+排出係数は環境省「温室効果ガス排出量算定・報告マニュアル」に準拠した値を使用しています。
+
+| 排出源 | 排出係数 | 単位 |
+|---|---|---|
+| 電力（日本平均） | 0.457 | kgCO2e/kWh |
+| 都市ガス | 2.23 | kgCO2e/m³ |
+| A重油 | 2.71 | kgCO2e/L |
+| 軽油 | 2.58 | kgCO2e/L |
+| ガソリン | 2.32 | kgCO2e/L |
+| 航空機（国内） | 0.11 | kgCO2e/人km |
+| 新幹線 | 0.029 | kgCO2e/人km |
+| 電車（通勤） | 0.017 | kgCO2e/人km |
+
+### 架空モデルケース企業（3社）
+
+業界ごとの典型的な企業を想定した架空モデルケースを実装し、実際の業務データを模したサンプルデータで動作を確認できます。
+
+| 企業名 | 業界 | 従業員数 | 削減目標 |
+|---|---|---|---|
+| 株式会社グリーンテック | ITサービス・ソフトウェア開発 | 50名 | 2030年までに30%削減 |
+| 山田精密工業株式会社 | 精密機器製造 | 200名 | SBTiに基づき42%削減 |
+| さくらマート株式会社 | 食品スーパーマーケット | 120名 | 2030年までに35%削減 |
+
+---
+
+## セットアップ
+
+**リポジトリのクローン**
+
+```bash
+git clone https://github.com/<your-username>/carbon-footprint-dashboard.git
+cd carbon-footprint-dashboard
+```
+
+**依存パッケージのインストール**
+
+```bash
+pnpm install
+```
+
+**開発サーバーの起動**
+
+```bash
+pnpm dev
+```
+
+ブラウザで `http://localhost:3000` を開いてください。
+
+---
+
+## ディレクトリ構成
+
+```
+client/
+  src/
+    pages/
+      Home.tsx          # ランディングページ
+      Templates.tsx     # 業界テンプレート一覧
+      Demo.tsx          # デモダッシュボード
+      About.tsx         # プロジェクト概要
+    components/
+      Navigation.tsx    # ナビゲーション
+      Footer.tsx        # フッター
+    lib/
+      industry-templates.ts  # テンプレート定義・計算ロジック・デモデータ
+```
+
+---
+
+## 今後の拡張予定
+
+- [ ] 自社データ入力フォームの実装（現在はデモデータのみ）
+- [ ] PDFレポート出力機能（ESG報告書の素材として活用）
+- [ ] 削減施策ごとの効果シミュレーション
+- [ ] 業界テンプレートの追加（飲食業・物流業・医療機関）
+- [ ] データのLocalStorage永続化
+
+---
+
+## 参考文献・データ出典
+
+- 環境省「温室効果ガス排出量算定・報告マニュアル」
+- GHG Protocol Corporate Standard（World Resources Institute）
+- Science Based Targets initiative（SBTi）
+
+---
+
+## 制作者
+
+**東京都市大学 環境学部 環境経営システム学科**
+経営工学研究室 / 3年
+
+> 環境経営の専門知識とWebアプリ開発技術を組み合わせ、社会課題の解決につながるプロダクトを制作することを目指しています。
