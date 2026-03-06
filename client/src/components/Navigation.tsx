@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/", label: "ホーム" },
   { href: "/templates", label: "業界テンプレート" },
   { href: "/demo", label: "デモ" },
+  { href: "/calculator", label: "自社データ入力" },
   { href: "/about", label: "このプロジェクトについて" },
 ];
 
