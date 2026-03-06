@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Templates from "./pages/Templates";
 import Demo from "./pages/Demo";
 import About from "./pages/About";
+import Calculator from "./pages/Calculator";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/templates" component={Templates} />
       <Route path="/demo" component={Demo} />
+      <Route path="/calculator" component={Calculator} />
       <Route path="/about" component={About} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
